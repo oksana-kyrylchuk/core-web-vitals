@@ -1,0 +1,110 @@
+/* Render-blocking web font import: the browser can't discover this until
+   it has already parsed this stylesheet, and there's no font-display
+   strategy set, so text is invisible until the font arrives (FOIT). */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=block");
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  background: #0b0d12;
+  color: #e8ebf3;
+}
+
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.hero {
+  position: relative;
+}
+
+/* No aspect-ratio / height reserved, so the layout jumps once the
+   (lazy-loaded, oversized) image finishes downloading. */
+.hero-image {
+  width: 100%;
+  display: block;
+}
+
+.hero-copy {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.hero-copy h1 {
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+/* No reserved space above the content it pushes down — when this mounts
+   ~1.8s in, everything below it visibly jumps. */
+.promo-banner {
+  background: #4f7cff;
+  color: white;
+  padding: 12px 20px;
+  font-weight: 600;
+}
+
+.promo-banner button {
+  margin-left: 8px;
+  background: white;
+  color: #4f7cff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+main {
+  padding: 24px;
+}
+
+.transactions-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.transactions-toolbar input {
+  flex: 1;
+  margin-right: 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #2a2f3a;
+  background: #151822;
+  color: inherit;
+  font-size: 1rem;
+}
+
+.transactions-table {
+  max-height: 480px;
+  overflow-y: auto;
+  border: 1px solid #1e222c;
+  border-radius: 8px;
+}
+
+.transaction-row {
+  display: grid;
+  grid-template-columns: 90px 110px 110px 1fr 90px 90px;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #1e222c;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.transaction-row:nth-child(odd) {
+  background: #10131b;
+}
+
+.chart-section {
+  margin-top: 32px;
+}
