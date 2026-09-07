@@ -24,6 +24,8 @@ dist-ssr
 *.sw?
 
 TASK.md
-SOLUTIONS.md# Lighthouse
+SOLUTIONS.md
+
+# Lighthouse
 *.report.html
 perf/reports/
