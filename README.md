@@ -1,4 +1,4 @@
-# ledger-lite-perf-lab
+# Core Web Vitals
 
 A small React + TypeScript finance dashboard used as a controlled environment
 for measuring and fixing Core Web Vitals. Performance problems are built in
@@ -26,6 +26,8 @@ npm install && npm run build && npm run preview
 Lighthouse run in Incognito with no extensions. INP measured separately in the
 Performance panel while typing in the search field, since a cold Lighthouse run
 doesn't capture interaction latency.
+
+npm run perf -- baseline --runs 5
 
 ## Results
 
