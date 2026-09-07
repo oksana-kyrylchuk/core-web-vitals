@@ -1,0 +1,38 @@
+{
+  "label": "baseline-inp",
+  "measuredAt": "2026-09-07T18:17:00+02:00",
+  "method": "manual: Chrome DevTools Performance panel, worst interaction per page load; cross-checked with a PerformanceObserver on 'event' entries",
+  "browser": "152.0.7977.77 (Official Build) (arm64)",
+  "profile": "incognito, no extensions",
+  "throttling": "CPU 4x slowdown, network Slow 4G — matches the Lighthouse mobile preset used for perf/runs/baseline.json",
+  "url": "http://localhost:4173",
+  "interaction": "typing \"biedronka\" into the transaction search field at a normal pace, after the page had settled",
+  "sessions": [
+    {
+      "run": 1,
+      "worstInteractionMs": 1248
+    },
+    {
+      "run": 2,
+      "worstInteractionMs": 1208,
+      "inputDelayMs": 1,
+      "processingMs": 1149,
+      "presentationMs": 60
+    },
+    {
+      "run": 3,
+      "worstInteractionMs": 1352,
+      "inputDelayMs": 717,
+      "processingMs": 583,
+      "presentationMs": 53
+    }
+  ],
+  "inpMs": 1352,
+  "targetMs": 200,
+  "notes": [
+    "Lighthouse reports no INP for a navigation. TBT (1524 ms, perf/runs/baseline.json) is the lab proxy; this file is the interaction measurement, taken by hand on the untouched build before any fix.",
+    "The worst interaction changes shape between runs but has a single cause. In run 2 the cost is processing: React re-renders 8000 rows synchronously inside the input handler, since updates from discrete events are not deferred. In run 3 the worst interaction is a keystroke that spent 717 ms in input delay, queued behind the previous render.",
+    "Per-event and per-interaction timings attribute the same interaction differently. On a controlled input the keydown entry has no listener of its own, so its processing reads ~0 and the work falls into its presentation delay; DevTools groups keydown/input/keyup by interactionId and reports that work as processing. The per-interaction numbers are the ones recorded here.",
+    "DevTools flagged a forced reflow during the same recording. Not investigated yet."
+  ]
+}
