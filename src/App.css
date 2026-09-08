@@ -18,11 +18,12 @@ body {
   position: relative;
 }
 
-/* No aspect-ratio / height reserved, so the layout jumps once the
-   (lazy-loaded, oversized) image finishes downloading. */
 .hero-image {
   width: 100%;
+  height: auto;
   display: block;
+  aspect-ratio: 5 / 3;
+  object-fit: cover;
 }
 
 .hero-copy {
