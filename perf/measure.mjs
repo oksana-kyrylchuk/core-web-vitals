@@ -244,7 +244,7 @@ async function loadRuns() {
       console.error(`    (skipped unreadable ${f})`);
     }
   }
-  return rows.sort((a, b) => String(a.savedAt).localeCompare(String(b.savedAt)));
+  return rows.filter((r) => r.metrics).sort((a, b) => String(a.savedAt).localeCompare(String(b.savedAt)));
 }
 
 function pad(s, w, right = false) {
@@ -281,7 +281,7 @@ async function printTable() {
 
   // Where the latest run stands against the first measurement.
   if (rows.length > 1) {
-    const first = rows[0];
+    const first = runs[0] ?? rows[0];
     const last = rows[rows.length - 1];
     const deltas = METRICS.map((m) => {
       const a = first.metrics?.[m.key];
