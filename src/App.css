@@ -1,8 +1,3 @@
-/* Render-blocking web font import: the browser can't discover this until
-   it has already parsed this stylesheet, and there's no font-display
-   strategy set, so text is invisible until the font arrives (FOIT). */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=block");
-
 * {
   box-sizing: border-box;
 }
