@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Header } from "./components/Header";
 import { PromoBanner } from "./components/PromoBanner";
 import { TransactionList } from "./components/TransactionList";
@@ -12,10 +12,45 @@ const SpendingChart = lazy(() =>
 
 function ChartFallback() {
   return (
-    <section className="chart-section" aria-hidden="true">
+    <section className="chart-section" aria-busy="true">
       <h2>Spending by category</h2>
       <div className="chart-fallback" />
     </section>
+  );
+}
+
+function LazySpendingChart() {
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const chartBoundaryRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const chartBoundary = chartBoundaryRef.current;
+    if (!chartBoundary) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px 0px" },
+    );
+
+    observer.observe(chartBoundary);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={chartBoundaryRef}>
+      {shouldLoad ? (
+        <Suspense fallback={<ChartFallback />}>
+          <SpendingChart />
+        </Suspense>
+      ) : (
+        <ChartFallback />
+      )}
+    </div>
   );
 }
 
@@ -26,9 +61,7 @@ function App() {
       <PromoBanner />
       <main>
         <TransactionList />
-        <Suspense fallback={<ChartFallback />}>
-          <SpendingChart />
-        </Suspense>
+        <LazySpendingChart />
       </main>
     </div>
   );
