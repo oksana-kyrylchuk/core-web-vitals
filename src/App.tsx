@@ -1,8 +1,23 @@
+import { lazy, Suspense } from "react";
 import { Header } from "./components/Header";
 import { PromoBanner } from "./components/PromoBanner";
 import { TransactionList } from "./components/TransactionList";
-import { SpendingChart } from "./components/SpendingChart";
 import "./App.css";
+
+const SpendingChart = lazy(() =>
+  import("./components/SpendingChart").then(({ SpendingChart: component }) => ({
+    default: component,
+  })),
+);
+
+function ChartFallback() {
+  return (
+    <section className="chart-section" aria-hidden="true">
+      <h2>Spending by category</h2>
+      <div className="chart-fallback" />
+    </section>
+  );
+}
 
 function App() {
   return (
@@ -11,7 +26,9 @@ function App() {
       <PromoBanner />
       <main>
         <TransactionList />
-        <SpendingChart />
+        <Suspense fallback={<ChartFallback />}>
+          <SpendingChart />
+        </Suspense>
       </main>
     </div>
   );

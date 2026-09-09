@@ -9,10 +9,8 @@ import {
 } from "recharts";
 import { TRANSACTIONS } from "../data/transactions";
 
-// This chart lives at the bottom of the page, behind zero interaction —
-// but recharts is imported eagerly at the top of the module graph (see
-// App.tsx), so its full weight ships in the initial bundle whether or not
-// anyone ever scrolls down to see it.
+// This chart lives at the bottom of the page and is loaded lazily by App.tsx,
+// keeping recharts out of the initial bundle.
 function buildCategoryTotals() {
   const totals = new Map<string, number>();
   for (const t of TRANSACTIONS) {

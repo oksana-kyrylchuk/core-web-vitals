@@ -108,3 +108,10 @@ main {
 .chart-section {
   margin-top: 32px;
 }
+
+.chart-fallback {
+  height: 320px;
+  border: 1px solid #1e222c;
+  border-radius: 8px;
+  background: #10131b;
+}
