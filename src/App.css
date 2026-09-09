@@ -40,6 +40,10 @@ body {
 
 /* No reserved space above the content it pushes down — when this mounts
    ~1.8s in, everything below it visibly jumps. */
+.promo-banner-container {
+  min-height: 50px;
+}
+
 .promo-banner {
   background: #4f7cff;
   color: white;
