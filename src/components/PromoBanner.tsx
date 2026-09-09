@@ -11,12 +11,16 @@ export function PromoBanner() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (!visible) return null;
-
   return (
-    <div className="promo-banner">
-      Go Premium: automatic categorization + unlimited accounts.{" "}
-      <button>Upgrade</button>
+    <div className="promo-banner-container">
+      {
+        visible ? (
+            <div className="promo-banner">
+              Go Premium: automatic categorization + unlimited accounts.{" "}
+              <button>Upgrade</button>
+            </div>
+        ) : null
+      }
     </div>
   );
 }
