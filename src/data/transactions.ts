@@ -59,3 +59,8 @@ function generateTransactions(count: number): Transaction[] {
 // 8,000 rows — small for a real backend, plenty to make an unoptimized
 // client-side filter/sort visibly janky on every keystroke.
 export const TRANSACTIONS: Transaction[] = generateTransactions(8000);
+
+export const MERCHANT_COUNTS = new Map<string, number>();
+for (const t of TRANSACTIONS) {
+  MERCHANT_COUNTS.set(t.merchant, (MERCHANT_COUNTS.get(t.merchant) ?? 0) + 1);
+}
