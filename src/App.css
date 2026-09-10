@@ -38,10 +38,8 @@ body {
   margin: 0;
 }
 
-/* No reserved space above the content it pushes down — when this mounts
-   ~1.8s in, everything below it visibly jumps. */
 .promo-banner-container {
-  min-height: 50px;
+  min-height: 51px;
 }
 
 .promo-banner {
@@ -91,7 +89,16 @@ main {
   border-radius: 8px;
 }
 
+.transactions-table-content {
+  position: relative;
+  width: 100%;
+}
+
 .transaction-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
   display: grid;
   grid-template-columns: 90px 110px 110px 1fr 90px 90px;
   gap: 8px;
@@ -101,7 +108,7 @@ main {
   white-space: nowrap;
 }
 
-.transaction-row:nth-child(odd) {
+.transaction-row[data-parity="1"] {
   background: #10131b;
 }
 
