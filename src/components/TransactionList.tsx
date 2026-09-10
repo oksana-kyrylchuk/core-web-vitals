@@ -1,4 +1,5 @@
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   MERCHANT_COUNTS,
   TRANSACTIONS,
@@ -29,6 +30,14 @@ export function TransactionList() {
     () => filterAndSort(deferredQuery),
     [deferredQuery],
   );
+  const tableRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: filteredItems.length,
+    getScrollElement: () => tableRef.current,
+    estimateSize: () => 34,
+    getItemKey: (index) => filteredItems[index].id,
+    overscan: 10,
+  });
   return (
     <section className="transactions">
       <div className="transactions-toolbar">
@@ -41,26 +50,40 @@ export function TransactionList() {
         <span>{filteredItems.length} transactions</span>
       </div>
 
-      <div className="transactions-table">
-        {filteredItems.map((t) => {
-          return (
-            <div className="transaction-row" key={t.id}>
-              <span className="col-date">{t.date}</span>
-              <span className="col-merchant">{t.merchant}</span>
-              <span className="col-category">{t.category}</span>
-              <span className="col-notes">{t.notes}</span>
-              <span className="col-risk">
-                seen ×{MERCHANT_COUNTS.get(t.merchant) ?? 0}
-              </span>
-              <span className="col-amount">
-                {t.amount.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                })}
-              </span>
-            </div>
-          );
-        })}
+      <div className="transactions-table" ref={tableRef}>
+        <div
+          className="transactions-table-content"
+          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const t = filteredItems[virtualRow.index];
+
+            return (
+              <div
+                className="transaction-row"
+                key={virtualRow.key}
+                data-parity={virtualRow.index % 2}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                style={{ transform: `translateY(${virtualRow.start}px)` }}
+              >
+                <span className="col-date">{t.date}</span>
+                <span className="col-merchant">{t.merchant}</span>
+                <span className="col-category">{t.category}</span>
+                <span className="col-notes">{t.notes}</span>
+                <span className="col-risk">
+                  seen ×{MERCHANT_COUNTS.get(t.merchant) ?? 0}
+                </span>
+                <span className="col-amount">
+                  {t.amount.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                  })}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
