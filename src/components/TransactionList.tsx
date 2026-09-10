@@ -1,16 +1,9 @@
 import { useState } from "react";
-import { TRANSACTIONS, type Transaction } from "../data/transactions";
-
-// Deliberately expensive: recomputes a "risk score" for every transaction
-// by scanning the whole dataset again for each row. O(n^2)-ish on purpose —
-// stands in for "some legacy scoring logic nobody wants to touch".
-function scoreTransaction(t: Transaction, all: Transaction[]): number {
-  let sameMerchantCount = 0;
-  for (const other of all) {
-    if (other.merchant === t.merchant) sameMerchantCount++;
-  }
-  return sameMerchantCount;
-}
+import {
+  MERCHANT_COUNTS,
+  TRANSACTIONS,
+  type Transaction,
+} from "../data/transactions";
 
 function filterAndSort(query: string): Transaction[] {
   const q = query.trim().toLowerCase();
@@ -31,8 +24,8 @@ function filterAndSort(query: string): Transaction[] {
 export function TransactionList() {
   const [query, setQuery] = useState("");
 
-  // No debounce, no useMemo: this whole pipeline (filter -> sort -> score
-  // -> render every row) reruns synchronously on every single keystroke.
+  // No debounce, no useMemo: this whole pipeline
+  // filter → sort → render every row, synchronously on every keystroke
   const results = filterAndSort(query);
 
   return (
@@ -52,14 +45,15 @@ export function TransactionList() {
           of rows long. */}
       <div className="transactions-table">
         {results.map((t) => {
-          const risk = scoreTransaction(t, TRANSACTIONS);
           return (
             <div className="transaction-row" key={t.id}>
               <span className="col-date">{t.date}</span>
               <span className="col-merchant">{t.merchant}</span>
               <span className="col-category">{t.category}</span>
               <span className="col-notes">{t.notes}</span>
-              <span className="col-risk">seen ×{risk}</span>
+              <span className="col-risk">
+                seen ×{MERCHANT_COUNTS.get(t.merchant) ?? 0}
+              </span>
               <span className="col-amount">
                 {t.amount.toLocaleString("en-US", {
                   style: "currency",
