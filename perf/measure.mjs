@@ -28,7 +28,6 @@ import * as chromeLauncher from 'chrome-launcher';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const RUNS_DIR = path.join(HERE, 'runs');
 const REPORTS_DIR = path.join(HERE, 'reports');
-const BASELINE_REPORT = path.join(HERE, 'lighthouse-before.report.json');
 
 /* ------------------------------------------------------------------ args */
 
@@ -65,8 +64,8 @@ function slug(s) {
 /* --------------------------------------------------------------- presets */
 
 // Mobile is Lighthouse's default (slow 4G, 4x CPU slowdown) and matches what
-// the DevTools Lighthouse tab does out of the box — so the numbers stay
-// comparable with the 22 Aug baseline.
+// the DevTools Lighthouse tab does out of the box. Every series in perf/runs/
+// was taken with this preset — changing it invalidates the comparison.
 const DESKTOP_PRESET = {
   formFactor: 'desktop',
   screenEmulation: { mobile: false, width: 1350, height: 940, deviceScaleFactor: 1, disabled: false },
@@ -215,20 +214,6 @@ async function measure() {
 
 /* ------------------------------------------------------------------ table */
 
-async function loadBaseline() {
-  try {
-    const lhr = JSON.parse(await readFile(BASELINE_REPORT, 'utf8'));
-    return {
-      label: 'baseline (22 Aug)',
-      preset: lhr.configSettings?.formFactor ?? '—',
-      savedAt: lhr.fetchTime ?? '',
-      metrics: extract(lhr),
-    };
-  } catch {
-    return null;
-  }
-}
-
 async function loadRuns() {
   let files = [];
   try {
@@ -252,9 +237,8 @@ function pad(s, w, right = false) {
 }
 
 async function printTable() {
-  const baseline = await loadBaseline();
   const runs = await loadRuns();
-  const rows = [...(baseline ? [baseline] : []), ...runs];
+  const rows = runs;
 
   if (rows.length === 0) {
     console.log('\n  No measurements yet. Run:  npm run perf -- baseline\n');
@@ -303,8 +287,8 @@ async function printTable() {
   }
 
   console.log('\n  INP is not in this table: a Lighthouse navigation never interacts with');
-  console.log('  the page. Measure it in the Performance panel while typing in search —');
-  console.log('  or with Playwright + web-vitals on Wednesday.\n');
+  console.log('  the page. It is measured by hand in the Performance panel while typing');
+  console.log('  in the search field — see the INP files in perf/runs/.\n');
 }
 
 /* ------------------------------------------------------------------- main */
