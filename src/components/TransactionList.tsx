@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import {
   MERCHANT_COUNTS,
   TRANSACTIONS,
@@ -17,17 +17,18 @@ function filterAndSort(query: string): Transaction[] {
       )
     : TRANSACTIONS;
 
-  // Sorting a copy on every call, on the full result set, on every keystroke.
+  // Sorting a copy on every call, on the full result set, on every deferred update.
   return [...filtered].sort((a, b) => b.amount - a.amount);
 }
 
 export function TransactionList() {
   const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query);
 
-  // No debounce, no useMemo: this whole pipeline
-  // filter → sort → render every row, synchronously on every keystroke
-  const results = filterAndSort(query);
-
+  const filteredItems = useMemo(
+    () => filterAndSort(deferredQuery),
+    [deferredQuery],
+  );
   return (
     <section className="transactions">
       <div className="transactions-toolbar">
@@ -37,14 +38,11 @@ export function TransactionList() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <span>{results.length} transactions</span>
+        <span>{filteredItems.length} transactions</span>
       </div>
 
-      {/* Every matching row is mounted as a real DOM node — no
-          windowing/virtualization, even though this list can be thousands
-          of rows long. */}
       <div className="transactions-table">
-        {results.map((t) => {
+        {filteredItems.map((t) => {
           return (
             <div className="transaction-row" key={t.id}>
               <span className="col-date">{t.date}</span>
