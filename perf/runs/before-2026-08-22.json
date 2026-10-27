@@ -1,0 +1,46 @@
+{
+  "label": "before-2026-08-22",
+  "url": "http://localhost:4173/",
+  "preset": "mobile",
+  "savedAt": "2026-08-22T11:09:31.078Z",
+  "runs": 1,
+  "metrics": {
+    "score": 50,
+    "fcp": 2165.2814999999996,
+    "lcp": 5544.621349999999,
+    "tbt": 1612.5222500000004,
+    "cls": 0.0232150720031984,
+    "si": 3481.548749272928,
+    "ttfb": 6
+  },
+  "medians": {
+    "score": 50,
+    "fcp": 2165.2814999999996,
+    "lcp": 5544.621349999999,
+    "tbt": 1612.5222500000004,
+    "cls": 0.0232150720031984,
+    "si": 3481.548749272928,
+    "ttfb": 6
+  },
+  "allScores": [
+    50
+  ],
+  "allRuns": [
+    {
+      "score": 50,
+      "fcp": 2165.2814999999996,
+      "lcp": 5544.621349999999,
+      "tbt": 1612.5222500000004,
+      "cls": 0.0232150720031984,
+      "si": 3481.548749272928,
+      "ttfb": 6
+    }
+  ],
+  "lighthouseVersion": "13.4.1",
+  "browser": "Chrome 151 (from the report's hostUserAgent)",
+  "notes": [
+    "A single Lighthouse run of the untouched app, taken before perf/measure.mjs existed. Extracted from the full report (805 KB, not committed).",
+    "One run is a sample, not a series: measure.mjs --table does not give it a row. It is here because the README cites it as evidence that a single run lands in either LCP mode.",
+    "TTFB 6 ms against 1-2 ms in every series: probably not the same preview rig, another reason not to put it in a table of medians."
+  ]
+}
