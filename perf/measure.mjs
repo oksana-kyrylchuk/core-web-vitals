@@ -12,7 +12,9 @@
  *   --table         print the table, measure nothing
  *
  * Each measurement writes:
- *   perf/runs/<label>.json              small summary, worth committing
+ *   perf/runs/<label>.json              small summary, worth committing:
+ *                                       `medians` (per metric) is what the table reads,
+ *                                       `metrics` is the single run whose report is kept
  *   perf/reports/<label>.report.html    full Lighthouse report, gitignore it
  *
  * Measure the production build (`npm run build && npm run preview`), never
@@ -24,9 +26,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import lighthouse from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
+import { mediansOf } from './stats.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const RUNS_DIR = path.join(HERE, 'runs');
+// Fewer runs than this is a sample, not a series: kept in perf/runs/ as
+// evidence, never given a row in the comparison table.
+const MIN_RUNS_FOR_TABLE = 3;
 const REPORTS_DIR = path.join(HERE, 'reports');
 
 /* ------------------------------------------------------------------ args */
@@ -183,7 +189,8 @@ async function measure() {
     if (chrome) await chrome.kill();
   }
 
-  // Median run, picked by performance score — one bad run can't skew the record.
+  // The run whose full HTML report is kept: the one with the median score.
+  // Its metrics are one run's, not medians — those are computed per metric below.
   const sorted = [...results].sort((a, b) => a.metrics.score - b.metrics.score);
   const median = sorted[Math.floor(sorted.length / 2)];
 
@@ -194,6 +201,7 @@ async function measure() {
     savedAt: new Date().toISOString(),
     runs: results.length,
     metrics: median.metrics,
+    medians: mediansOf(results.map((r) => r.metrics)),
     allScores: results.map((r) => Math.round(r.metrics.score)),
     allRuns: results.map((r) => r.metrics),
   };
@@ -229,7 +237,14 @@ async function loadRuns() {
       console.error(`    (skipped unreadable ${f})`);
     }
   }
-  return rows.filter((r) => r.metrics).sort((a, b) => String(a.savedAt).localeCompare(String(b.savedAt)));
+  const skipped = rows.filter((r) => r.metrics && (r.runs ?? 1) < MIN_RUNS_FOR_TABLE);
+  for (const r of skipped) {
+    console.log(`    (not tabled: ${r.label} has ${r.runs ?? 1} run${(r.runs ?? 1) === 1 ? '' : 's'}, fewer than ${MIN_RUNS_FOR_TABLE})`);
+  }
+  return rows
+    .filter((r) => r.metrics && (r.runs ?? 1) >= MIN_RUNS_FOR_TABLE)
+    .map((r) => ({ ...r, summary: r.medians ?? r.metrics }))
+    .sort((a, b) => String(a.savedAt).localeCompare(String(b.savedAt)));
 }
 
 function pad(s, w, right = false) {
@@ -248,7 +263,7 @@ async function printTable() {
   const cells = rows.map((r) => ({
     label: r.label,
     values: METRICS.map((m) => {
-      const v = r.metrics?.[m.key];
+      const v = r.summary?.[m.key];
       return v == null ? '—' : m.format(v);
     }),
   }));
@@ -258,6 +273,7 @@ async function printTable() {
 
   const line = (l, vals) => `  ${pad(l, labelW)}  ${vals.map((v, i) => pad(v, colW[i], true)).join('  ')}`;
 
+  console.log('\n  Median of each metric across the runs of a series.');
   console.log('');
   console.log(line('Measurement', METRICS.map((m) => m.label)));
   console.log(`  ${'-'.repeat(labelW)}  ${colW.map((w) => '-'.repeat(w)).join('  ')}`);
@@ -268,8 +284,8 @@ async function printTable() {
     const first = runs[0] ?? rows[0];
     const last = rows[rows.length - 1];
     const deltas = METRICS.map((m) => {
-      const a = first.metrics?.[m.key];
-      const b = last.metrics?.[m.key];
+      const a = first.summary?.[m.key];
+      const b = last.summary?.[m.key];
       if (a == null || b == null) return null;
       const diff = b - a;
       if (Math.abs(diff) < 1e-9) return `${m.label} unchanged`;
