@@ -1,0 +1,62 @@
+{
+  "label": "inp-manual",
+  "method": "manual: Chrome DevTools Performance panel, worst interaction per page load; cross-checked with a PerformanceObserver on 'event' entries",
+  "browser": "152.0.7977.77 (Official Build) (arm64)",
+  "profile": "incognito, no extensions",
+  "throttling": "CPU 4x slowdown, network Slow 4G — matches the Lighthouse mobile preset",
+  "url": "http://localhost:4173",
+  "interaction": "typing \"biedronka\" into the transaction search field at a normal pace, after the page had settled",
+  "targetMs": 200,
+  "steps": [
+    {
+      "step": "baseline",
+      "commit": "ab5ec18",
+      "measuredAt": "2026-09-07",
+      "worstInteractionMs": [1248, 1208, 1352],
+      "inpMs": 1352,
+      "source": "perf/runs/baseline-inp.json, which also has the per-phase breakdown"
+    },
+    {
+      "step": "step-3b-lazy-on-visible",
+      "commit": "b748b79",
+      "measuredAt": "2026-09-10",
+      "worstInteractionMs": [945, 986, 1014],
+      "inpMs": 1014,
+      "note": "Start of the INP work. 1352 -> 1014 is not attributed to any fix: none of the LCP, CLS or bundle changes targeted interaction cost, and this was a different day's session."
+    },
+    {
+      "step": "step-4a-merchant-map",
+      "commit": "21569ab",
+      "measuredAt": "2026-09-10",
+      "worstInteractionMs": [697, 721, 760],
+      "inpMs": 760
+    },
+    {
+      "step": "step-4b-usememo",
+      "commit": null,
+      "measuredAt": "2026-09-10",
+      "worstInteractionMs": [742, 758, 808],
+      "inpMs": 808,
+      "note": "useMemo on filter + sort, measured on its own. No separate commit: it landed together with useDeferredValue in 554f2b5. Samples overlap with the previous step, i.e. no measurable change."
+    },
+    {
+      "step": "step-4c-deferred-value",
+      "commit": "554f2b5",
+      "measuredAt": "2026-09-10",
+      "worstInteractionMs": [4650, 5350, 5589],
+      "inpMs": 5589,
+      "note": "useDeferredValue before virtualization: a 7x regression, samples do not overlap. Each keystroke starts a low-priority render of up to 8000 rows, the next keystroke restarts it, and the starved work is eventually flushed synchronously - 4.79 s of processing inside one interaction."
+    },
+    {
+      "step": "step-4-inp",
+      "commit": "cf032d5",
+      "measuredAt": "2026-09-10",
+      "worstInteractionMs": [44, 45, 51],
+      "inpMs": 51
+    }
+  ],
+  "notes": [
+    "Until this file existed, every number after the baseline lived only in commit messages.",
+    "inpMs is the worst of the three page loads per step, the same rule as baseline-inp.json."
+  ]
+}
