@@ -29,3 +29,9 @@ SOLUTIONS.md
 # Lighthouse
 *.report.html
 perf/reports/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

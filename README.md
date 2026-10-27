@@ -246,6 +246,24 @@ only after the fixes were measured.
   left alone to keep the series comparable. When virtualization fixed it as a
   side effect, it broke comparability anyway, at the end.
 
+## Tests
+
+End-to-end tests run with Playwright against the same production build the
+measurements use (`npm run build && npm run preview`, started by Playwright's
+`webServer`). Two projects: desktop Chrome, and a mobile profile matching the
+Lighthouse mobile emulation (412×823, DPR 1.75).
+
+```
+npx playwright install chromium   # once
+npm run test:e2e
+npm run test:e2e:ui               # watch mode with the trace viewer
+```
+
+Currently a smoke suite: the page shell renders with no errors from the app's
+own origin, the full list shows 8000 transactions, and search narrows,
+empties and restores the list. Checked the other way round too: with the
+filter disabled in the app, the three search tests fail.
+
 ## Method
 
 Production build, never the dev server:
