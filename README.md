@@ -209,13 +209,15 @@ only after the fixes were measured.
 
 ## Known issues
 
-- **CLS is 0.016 after virtualization, not 0.** Absolutely positioned rows no
-  longer give the page its intrinsic width, so on the 412 px mobile viewport
-  `.app` is now actually narrow. The banner text wraps there and outgrows its
-  51 px reserve. The `layout-shifts` audit attributes the whole 0.016 to
-  `<main>`. Before this, `white-space: nowrap` rows kept the layout about
-  830 px wide on every viewport, so the earlier "mobile" series measured a
-  desktop-width layout on a mobile CPU and network.
+- **CLS was 0.016 after virtualization, not 0** — fixed since, not yet
+  re-measured. Absolutely positioned rows no longer gave the page its
+  intrinsic width, so on the 412 px viewport `.app` became actually narrow,
+  the banner text wrapped and outgrew its 51 px reserve (`<main>` moved).
+  Before this, `white-space: nowrap` rows kept the layout about 830 px wide on
+  every viewport, so the earlier "mobile" series measured a desktop-width
+  layout on a mobile CPU and network. The banner is now rendered hidden from
+  the first paint, so its slot fits the copy at any width; the layout-shift
+  test reports no shift at 1280, 412 or 320 px.
 - **`toLocaleString` with options on every row** builds a new number formatter
   on each call. Virtualization hid the cost but did not remove it.
 - **A forced reflow** flagged by DevTools in the baseline recording was never
@@ -280,7 +282,6 @@ What the suite covers (`tests/`):
   nears the viewport, and the placeholder and the chart have the same height.
   On the mobile viewport the placeholder starts inside the 200 px root margin,
   so the chart loads without scrolling; that is tested as its own case.
-
 - **accessibility** — axe-core (WCAG 2.2 AA + best practice) finds nothing,
   under both the light and the dark system color scheme, with the banner and
   the chart loaded. Beyond what axe can check: the list is a table with column
@@ -290,10 +291,19 @@ What the suite covers (`tests/`):
   table. Tab reaches every control in order, each with a visible focus ring
   and no trap; search and scrolling (End) work without a mouse; at 320 CSS px
   only the table scrolls sideways (WCAG 1.4.10).
+- **performance guards** — the fixes measured above, kept from regressing. The
+  hero image is the LCP element, first-party, requested once (a preload that
+  drifts from the `<img>` srcset would fetch it twice), not lazy, under
+  200 kB. No layout shift at all while the banner and the chart arrive, at
+  1280, 412 and 320 px. INP: typing "biedronka" at 4x CPU slowdown (via CDP),
+  the worst interaction from `PerformanceObserver` stays under 200 ms; on a
+  test machine it reads 32–56 ms, in line with the 44–51 ms measured by hand.
+  The entry chunk stays under 250 kB with no recharts code in it.
 
 Each group was checked the other way round: disabling virtualization, reversing
 the sort, loading the chart eagerly or dropping category from the search makes
-the matching tests fail. The suite also found bugs: one result was shown as
+the matching tests fail; so do a lazy hero image, a preload without its
+srcset, recharts imported statically, and virtualization switched off (INP). The suite also found bugs: one result was shown as
 "1 transactions"; with the keyboard, End stopped short of the last row,
 because rows were estimated at 34 px and measured at 43; and the
 accessibility pass turned up a chart heading at 1.03:1 contrast for anyone
