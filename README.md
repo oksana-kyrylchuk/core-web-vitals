@@ -223,6 +223,10 @@ only after the fixes were measured.
 - **Late-painting runs.** In three of the first five series, some runs had a
   first paint at 3.2 s against 2.1 s. These runs did not follow any change made
   to the page, and the cause is unknown. They disappear from fix 3b onward.
+- **The measurement series predate the accessibility pass.** It added a
+  sticky header row, fixed 40 px rows (they were measured at about 43 px), a
+  wrapping toolbar and different banner colors. The before/after numbers above
+  describe the app as it was on 10 Sep; they have not been re-measured since.
 
 ## What I would do differently
 
@@ -277,10 +281,23 @@ What the suite covers (`tests/`):
   On the mobile viewport the placeholder starts inside the 200 px root margin,
   so the chart loads without scrolling; that is tested as its own case.
 
+- **accessibility** — axe-core (WCAG 2.2 AA + best practice) finds nothing,
+  under both the light and the dark system color scheme, with the banner and
+  the chart loaded. Beyond what axe can check: the list is a table with column
+  headers and a real size (`aria-rowcount`, `aria-rowindex` on the ~20 rendered
+  rows); the search box has a label; the result count is a status region; the
+  promotion is a labelled landmark; the chart has a name and its figures as a
+  table. Tab reaches every control in order, each with a visible focus ring
+  and no trap; search and scrolling (End) work without a mouse; at 320 CSS px
+  only the table scrolls sideways (WCAG 1.4.10).
+
 Each group was checked the other way round: disabling virtualization, reversing
 the sort, loading the chart eagerly or dropping category from the search makes
-the matching tests fail. The suite also found a bug: one result was shown as
-"1 transactions".
+the matching tests fail. The suite also found bugs: one result was shown as
+"1 transactions"; with the keyboard, End stopped short of the last row,
+because rows were estimated at 34 px and measured at 43; and the
+accessibility pass turned up a chart heading at 1.03:1 contrast for anyone
+whose system is in light mode.
 
 ## Method
 
