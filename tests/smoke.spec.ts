@@ -1,20 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
-
-const TOTAL = 8000;
-
-// The transaction rows are plain <div>s with no list or table semantics, so
-// there is no role to query them by. CSS is the only handle for now; giving
-// the list real semantics is part of the accessibility session (B3), and these
-// locators should move to getByRole when it does.
-const rows = (page: Page) => page.locator('.transaction-row');
-
-// Matches "8000 transactions", "152 transactions", "0 transactions".
-const resultCount = (page: Page) => page.getByText(/^\d+ transactions$/);
-
-async function countShown(page: Page) {
-  const text = await resultCount(page).textContent();
-  return Number(text?.match(/^(\d+)/)?.[1]);
-}
+import { test, expect } from '@playwright/test';
+import { TOTAL, countShown, resultCount, rows, search } from './support/list';
 
 test.describe('smoke', () => {
   test('renders the page shell without console errors', async ({ page, baseURL }) => {
@@ -49,11 +34,8 @@ test.describe('smoke', () => {
 
   test('search narrows the list to matching rows', async ({ page }) => {
     await page.goto('/');
-    // The input has no <label>; its accessible name comes from the placeholder,
-    // which is a fallback rather than a label. Flagged for B3.
-    const search = page.getByRole('textbox', { name: /search merchant, category, or notes/i });
 
-    await search.fill('biedronka');
+    await search(page).fill('biedronka');
 
     // The list renders from a deferred value, so the count settles a moment
     // after the input changes; toHaveText retries until it does.
@@ -70,7 +52,7 @@ test.describe('smoke', () => {
 
   test('a search with no matches shows zero rows', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('textbox', { name: /search merchant/i }).fill('no-such-merchant-xyz');
+    await search(page).fill('no-such-merchant-xyz');
 
     await expect(resultCount(page)).toHaveText('0 transactions');
     await expect(rows(page)).toHaveCount(0);
@@ -78,12 +60,11 @@ test.describe('smoke', () => {
 
   test('clearing the search restores the full list', async ({ page }) => {
     await page.goto('/');
-    const search = page.getByRole('textbox', { name: /search merchant/i });
 
-    await search.fill('biedronka');
+    await search(page).fill('biedronka');
     await expect(resultCount(page)).not.toHaveText(`${TOTAL} transactions`);
 
-    await search.clear();
+    await search(page).clear();
     await expect(resultCount(page)).toHaveText(`${TOTAL} transactions`);
   });
 });

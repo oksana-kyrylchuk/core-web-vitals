@@ -259,10 +259,28 @@ npm run test:e2e
 npm run test:e2e:ui               # watch mode with the trace viewer
 ```
 
-Currently a smoke suite: the page shell renders with no errors from the app's
-own origin, the full list shows 8000 transactions, and search narrows,
-empties and restores the list. Checked the other way round too: with the
-filter disabled in the app, the three search tests fail.
+What the suite covers (`tests/`):
+
+- **smoke** — the page shell renders with no errors from the app's own origin;
+  the full list shows 8000 transactions; search narrows, empties and restores it.
+- **search** — case-insensitive, ignores surrounding spaces, matches category
+  and notes as well as merchant, and typing key by key converges on the same
+  result as pasting (the list renders from `useDeferredValue`). Expected counts
+  come from the app's own seeded dataset, so they are exact.
+- **ordering** — rows are sorted by amount, largest first, with and without a
+  search, and the first row is the largest amount in the whole result.
+- **virtualization** — dozens of rows in the DOM, not 8000; scrolling to the end
+  renders row 7999 and drops row 0; a new search after a deep scroll still
+  renders from the top.
+- **lazy chart** — on desktop the chart chunk is not requested until the chart
+  nears the viewport, and the placeholder and the chart have the same height.
+  On the mobile viewport the placeholder starts inside the 200 px root margin,
+  so the chart loads without scrolling; that is tested as its own case.
+
+Each group was checked the other way round: disabling virtualization, reversing
+the sort, loading the chart eagerly or dropping category from the search makes
+the matching tests fail. The suite also found a bug: one result was shown as
+"1 transactions".
 
 ## Method
 
