@@ -80,16 +80,16 @@ body {
   margin: 0;
 }
 
-.promo-banner-container {
-  min-height: 51px;
-}
-
 .promo-banner {
   /* #4f7cff gave white text 3.71:1; this is 5.11:1. */
   background: #3563e9;
   color: white;
   padding: 12px 20px;
   font-weight: 600;
+}
+
+.promo-banner[data-visible="false"] {
+  visibility: hidden;
 }
 
 .promo-banner button {

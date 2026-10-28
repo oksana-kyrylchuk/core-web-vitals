@@ -11,16 +11,23 @@ export function PromoBanner() {
     return () => clearTimeout(timer);
   }, []);
 
+  // The banner is in the DOM from the first paint and only becomes visible
+  // when the "personalization" arrives, so its slot is exactly as tall as the
+  // banner at every width. A fixed min-height could not be: the copy wraps to
+  // one, two or three lines (50, 71 and 94 px) depending on the viewport, and
+  // the shortfall was the whole remaining CLS. visibility: hidden also keeps
+  // the hidden banner out of the accessibility tree and the tab order.
+  //
+  // This works because the copy is known up front. For content that really
+  // arrives late, the slot needs a fixed height with the text clamped to fit.
   return (
-    <div className="promo-banner-container">
-      {
-        visible ? (
-            <aside className="promo-banner" aria-label="Promotion">
-              Go Premium: automatic categorization + unlimited accounts.{" "}
-              <button type="button">Upgrade</button>
-            </aside>
-        ) : null
-      }
-    </div>
+    <aside
+      className="promo-banner"
+      aria-label="Promotion"
+      data-visible={visible}
+    >
+      Go Premium: automatic categorization + unlimited accounts.{" "}
+      <button type="button">Upgrade</button>
+    </aside>
   );
 }
