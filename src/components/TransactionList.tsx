@@ -47,7 +47,9 @@ export function TransactionList() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <span>{filteredItems.length} transactions</span>
+        <span>
+          {filteredItems.length} {filteredItems.length === 1 ? "transaction" : "transactions"}
+        </span>
       </div>
 
       <div className="transactions-table" ref={tableRef}>
