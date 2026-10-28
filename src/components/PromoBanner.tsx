@@ -15,10 +15,10 @@ export function PromoBanner() {
     <div className="promo-banner-container">
       {
         visible ? (
-            <div className="promo-banner">
+            <aside className="promo-banner" aria-label="Promotion">
               Go Premium: automatic categorization + unlimited accounts.{" "}
-              <button>Upgrade</button>
-            </div>
+              <button type="button">Upgrade</button>
+            </aside>
         ) : null
       }
     </div>

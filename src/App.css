@@ -2,6 +2,20 @@
   box-sizing: border-box;
 }
 
+/*
+ * The app has one design, and it is dark. index.css (left over from the Vite
+ * template) still switches its tokens on prefers-color-scheme, which made the
+ * headings near-black on this dark page for anyone in light mode
+ * (contrast 1.03:1). Pin the tokens to the dark set.
+ */
+:root {
+  color-scheme: dark;
+  --text: #9ca3af;
+  --text-h: #f3f4f6;
+  --bg: #16171d;
+  --border: #2e303a;
+}
+
 body {
   margin: 0;
   font-family: "Inter", system-ui, sans-serif;
@@ -43,7 +57,8 @@ body {
 }
 
 .promo-banner {
-  background: #4f7cff;
+  /* #4f7cff gave white text 3.71:1; this is 5.11:1. */
+  background: #3563e9;
   color: white;
   padding: 12px 20px;
   font-weight: 600;
@@ -52,7 +67,7 @@ body {
 .promo-banner button {
   margin-left: 8px;
   background: white;
-  color: #4f7cff;
+  color: #3563e9;
   border: none;
   border-radius: 6px;
   padding: 4px 12px;
