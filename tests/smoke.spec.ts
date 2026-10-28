@@ -25,6 +25,31 @@ test.describe('smoke', () => {
     expect(errors).toEqual([]);
   });
 
+  test('the hero heading does not run into the tagline', async ({ page }) => {
+    await page.goto('/');
+    const heading = page.getByRole('heading', { level: 1, name: 'Ledger' });
+    const tagline = page.getByText('Your spending, all in one place.');
+    await expect(heading).toBeVisible();
+
+    // Element boxes are not enough: with a line-height smaller than the font,
+    // the boxes touch exactly while the glyphs overlap. A Range around the
+    // text measures the font's own content area, which is what you see.
+    const textBox = (el: Element) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const r = range.getBoundingClientRect();
+      return { top: r.top, bottom: r.bottom, left: r.left };
+    };
+    const h = await heading.evaluate(textBox);
+    const t = await tagline.evaluate(textBox);
+
+    // The content area includes the font's own spacing below the descenders,
+    // so adjacent lines may share a pixel or two. Before the fix the heading
+    // reached 12px into the tagline.
+    expect(h.bottom - t.top, 'heading text overlaps the tagline by (px)').toBeLessThanOrEqual(2);
+    expect(Math.abs(h.left - t.left), 'heading and tagline share a left edge').toBeLessThan(4);
+  });
+
   test('shows every transaction before a search', async ({ page }) => {
     await page.goto('/');
 

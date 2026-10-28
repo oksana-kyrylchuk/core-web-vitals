@@ -65,11 +65,18 @@ body {
   position: absolute;
   bottom: 24px;
   left: 24px;
+  /* #root centres text (index.css, from the Vite template); the copy block is
+     anchored bottom-left, so its lines should start there too. */
+  text-align: left;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 }
 
 .hero-copy h1 {
   font-size: 2.5rem;
+  /* index.css sets font: 18px/145% on :root. A percentage line-height is
+     computed once, to 26.1px, and inherited as a length, so this 45px heading
+     got a 26px line and its glyphs ran into the tagline below. */
+  line-height: 1.1;
   margin: 0;
 }
 
