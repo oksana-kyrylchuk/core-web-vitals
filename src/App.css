@@ -41,6 +41,10 @@ body {
 }
 
 .app {
+  /* Without an explicit width, auto margins inside #root's flex column make
+     .app shrink-to-fit its content, so the widest child (the chart, which
+     recharts sizes in px) set the page width: 393px on a 320px screen. */
+  width: 100%;
   max-width: 960px;
   margin: 0 auto;
 }
@@ -98,14 +102,19 @@ main {
 
 .transactions-toolbar {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
 }
 
 .transactions-toolbar input {
-  flex: 1;
-  margin-right: 16px;
+  /* Wraps the count onto its own line before the field gets unusably narrow. */
+  flex: 1 1 14rem;
+  /* An input's intrinsic width (~20ch) is its flex minimum by default; that
+     alone pushed the page past a 320px viewport. */
+  min-width: 0;
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #2a2f3a;
