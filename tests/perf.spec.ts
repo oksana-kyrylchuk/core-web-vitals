@@ -67,6 +67,8 @@ test.describe('LCP: the hero image', () => {
     await expect(page.getByRole('img', { name: 'Dashboard overview' })).toBeVisible();
     await page.waitForLoadState('load');
 
+    // LCP entries are delivered asynchronously after the paint; poll for one.
+    await expect.poll(async () => (await perf(page)).lcp.length).toBeGreaterThan(0);
     const { lcp } = await perf(page);
     const last = lcp.at(-1)!;
     expect(last.element, 'LCP element').toBe('img.hero-image');
@@ -173,8 +175,9 @@ test.describe('bundle', () => {
     // not contain them, the lazy chart chunk must.
     expect(main).not.toContain('recharts-');
 
-    const chartChunk = main.match(/assets\/SpendingChart-[\w-]+\.js/)?.[0];
+    // Vite references the lazy chunk relative to the entry: "./SpendingChart-<hash>.js".
+    const chartChunk = main.match(/SpendingChart-[\w-]+\.js/)?.[0];
     expect(chartChunk, 'main chunk references the lazy chart chunk').toBeTruthy();
-    expect(await (await request.get('/' + chartChunk)).text()).toContain('recharts-');
+    expect(await (await request.get(new URL(chartChunk!, new URL(entry!, 'http://x')).pathname)).text()).toContain('recharts-');
   });
 });
