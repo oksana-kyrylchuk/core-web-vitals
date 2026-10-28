@@ -138,6 +138,9 @@ main {
   top: 0;
   left: 0;
   width: 100%;
+  /* Fixed: the virtualizer's ROW_HEIGHT in TransactionList.tsx. */
+  height: 40px;
+  line-height: 22px;
   display: grid;
   grid-template-columns: 90px 110px 110px 1fr 90px 90px;
   gap: 8px;
@@ -150,8 +153,6 @@ main {
 .transaction-header {
   position: sticky;
   z-index: 1;
-  height: 40px;
-  line-height: 22px;
   background: #151822;
   font-weight: 600;
 }

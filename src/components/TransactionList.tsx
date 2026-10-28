@@ -22,6 +22,12 @@ function filterAndSort(query: string): Transaction[] {
   return [...filtered].sort((a, b) => b.amount - a.amount);
 }
 
+// Rows are single-line (nowrap), so every row has the same, known height. Must
+// match .transaction-row in App.css. An estimate that is off (it was 34 against
+// a real 43) makes the scroll height grow as rows get measured, and End or
+// dragging the scrollbar to the bottom stops short of the last transaction.
+const ROW_HEIGHT = 40;
+
 // The header row sits inside the scroll container (position: sticky), so the
 // virtual rows start below it.
 const HEADER_HEIGHT = 40;
@@ -47,7 +53,7 @@ export function TransactionList() {
   const rowVirtualizer = useVirtualizer({
     count: filteredItems.length,
     getScrollElement: () => tableRef.current,
-    estimateSize: () => 34,
+    estimateSize: () => ROW_HEIGHT,
     getItemKey: (index) => filteredItems[index].id,
     overscan: 10,
     paddingStart: HEADER_HEIGHT,
@@ -114,7 +120,6 @@ export function TransactionList() {
                 key={virtualRow.key}
                 data-parity={virtualRow.index % 2}
                 data-index={virtualRow.index}
-                ref={rowVirtualizer.measureElement}
                 role="row"
                 aria-rowindex={virtualRow.index + 2}
                 style={{ transform: `translateY(${virtualRow.start}px)` }}
