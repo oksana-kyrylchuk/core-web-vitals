@@ -12,24 +12,36 @@ hand and reported separately.
 
 Lighthouse mobile preset, production build, median of 9 runs per series.
 
-| Metric | Target | Before · 7 Sep | After · 10 Sep | Range before | Range after |
+| Metric | Target | Before · 7 Sep | After · 29 Oct | Range before | Range after |
 |---|---|---|---|---|---|
-| Performance score | 100 | 51 | **99** | 51–62 | 99–99 |
-| LCP | ≤ 2.5 s | 5.49 s | **1.75 s** ¹ | 3.61–5.50 s | 1.75–1.77 s |
-| TBT (lab proxy for INP) | ≤ 200 ms | 1484 ms | **23 ms** | 1224–1536 ms | 4–35 ms |
-| CLS | ≤ 0.1 | 0.023 | **0.016** ¹ | constant | constant |
-| FCP | ≤ 1.8 s | 2.10 s | **1.65 s** ¹ | 2.10–2.79 s | 1.65–1.66 s |
-| Speed Index | ≤ 3.4 s | 3.00 s | **1.65 s** | 2.93–3.55 s | 1.65–1.66 s |
-| **INP** (manual, worst of 3 loads) | ≤ 200 ms | 1352 ms | **51 ms** | 1208–1352 ms | 44–51 ms |
+| Performance score | 100 | 51 | **99** | 51–62 | 90–99 ² |
+| LCP | ≤ 2.5 s | 5.49 s | **1.75 s** ¹ | 3.61–5.50 s | 1.75–3.04 s ² |
+| TBT (lab proxy for INP) | ≤ 200 ms | 1484 ms | **24 ms** | 1224–1536 ms | 5–25 ms |
+| CLS | ≤ 0.1 | 0.023 | **0** | constant | constant |
+| FCP | ≤ 1.8 s | 2.10 s | **1.65 s** ¹ | 2.10–2.79 s | 1.65–2.67 s ² |
+| Speed Index | ≤ 3.4 s | 3.00 s | **1.65 s** | 2.93–3.55 s | 1.65–2.67 s ² |
+| **INP** (manual, worst of 3 loads) | ≤ 200 ms | 1352 ms | **51 ms** ³ | 1208–1352 ms | 44–51 ms |
 
-¹ The last fix (virtualization) changed the page's layout, so LCP, FCP and CLS
-after it are not directly comparable with earlier series (see
-[known issues](#known-issues)). Measured just before it, on the pre-virtualization
-layout, they were **LCP 1.59 s, FCP 1.51 s, CLS 0**. TBT and INP are
-comparable across all series.
+"After" is the `step-5-a11y-cls` series: the app as it is now, after the
+performance fixes, the accessibility pass and the banner fix. It was taken
+with HeadlessChrome 156; every earlier series used 152.
+
+¹ Virtualization changed the page's layout (see [known issues](#known-issues)),
+so LCP and FCP after it are not directly comparable with the baseline.
+Measured just before it, on the old layout, they were **LCP 1.59 s, FCP
+1.51 s**. TBT, CLS and INP are comparable across all series.
+
+² One run of the nine painted late: first paint at 2.67 s against 1.65 s,
+LCP followed, score 90. The other eight are within 2 ms (FCP) and 4 ms
+(LCP) of each other. See "late-painting runs" in known issues.
+
+³ Measured by hand on 10 Sep, after virtualization. The Playwright INP test
+now repeats the measurement on every run; on this Mac at 4x CPU slowdown no
+keystroke reaches the 16 ms that Event Timing reports.
 
 The before and after distributions don't overlap for TBT, INP or LCP, so those
-improvements are well outside run-to-run noise.
+improvements are well outside run-to-run noise. CLS went from 0.016 in all nine
+runs of the previous series to 0 in all nine.
 
 ### Every series
 
@@ -43,6 +55,7 @@ improvements are well outside run-to-run noise.
 | `step-3b-lazy-on-visible` | [`b748b79`][b748b79] | 74 | 1.51 s | 1.58 s · 1.58–1.73 | 1356 ms · 1243–1818 | 0 |
 | `step-4a-merchant-map` | [`21569ab`][21569ab] | 77 | 1.51 s | 1.59 s · 1.58–1.73 | 1015 ms · 896–1561 | 0 |
 | `step-4-inp` | [`cf032d5`][cf032d5] | 99 | 1.65 s | 1.75 s · 1.75–1.77 | 23 ms · 4–35 | 0.016 |
+| `step-5-a11y-cls` | [`4009e18`][4009e18] | 99 | 1.65 s | 1.75 s · 1.75–3.04 | 24 ms · 5–25 | 0 |
 
 ² One run of the nine reported CLS 0.604. It did not recur in the 54 committed runs
 that followed and was not explained.
@@ -209,26 +222,25 @@ only after the fixes were measured.
 
 ## Known issues
 
-- **CLS was 0.016 after virtualization, not 0** — fixed since, not yet
-  re-measured. Absolutely positioned rows no longer gave the page its
+- **CLS was 0.016 after virtualization, not 0** — fixed since, and 0 in all
+  nine runs of `step-5-a11y-cls`. Absolutely positioned rows no longer gave the page its
   intrinsic width, so on the 412 px viewport `.app` became actually narrow,
   the banner text wrapped and outgrew its 51 px reserve (`<main>` moved).
   Before this, `white-space: nowrap` rows kept the layout about 830 px wide on
   every viewport, so the earlier "mobile" series measured a desktop-width
   layout on a mobile CPU and network. The banner is now rendered hidden from
   the first paint, so its slot fits the copy at any width; the layout-shift
-  test reports no shift at 1280, 412 or 320 px.
+  test reports no visible shift at 1280, 412 or 320 px.
 - **`toLocaleString` with options on every row** builds a new number formatter
   on each call. Virtualization hid the cost but did not remove it.
 - **A forced reflow** flagged by DevTools in the baseline recording was never
   investigated.
 - **Late-painting runs.** In three of the first five series, some runs had a
   first paint at 3.2 s against 2.1 s. These runs did not follow any change made
-  to the page, and the cause is unknown. They disappear from fix 3b onward.
-- **The measurement series predate the accessibility pass.** It added a
-  sticky header row, fixed 40 px rows (they were measured at about 43 px), a
-  wrapping toolbar and different banner colors. The before/after numbers above
-  describe the app as it was on 10 Sep; they have not been re-measured since.
+  to the page, and the cause is unknown. They were absent from the three
+  series from fix 3b on, which an earlier version of this file took to mean they
+  were gone; one came back in `step-5-a11y-cls` (2.67 s against 1.65 s). Still
+  unexplained, and visible only because every run is kept.
 
 ## What I would do differently
 
@@ -326,9 +338,9 @@ npm run perf -- --table
 
 - Lighthouse 13.4.1 (pinned in devDependencies), default mobile preset:
   simulated slow 4G, 4× CPU slowdown.
-- HeadlessChrome 152, launched by `chrome-launcher`, no extensions, on an
-  otherwise idle Mac. The Chrome version is recorded in the HTML reports,
-  not in `perf/runs/`.
+- HeadlessChrome 152 for the September series and 156 for `step-5-a11y-cls`,
+  launched by `chrome-launcher`, no extensions, on an otherwise idle Mac. The
+  Chrome version is recorded in the HTML reports, not in `perf/runs/`.
 - 9 runs per series, with the same preset and run count for every series.
 - `perf/runs/<label>.json` keeps every run (`allRuns`) and the per-metric
   `medians` that the tables use. Full HTML reports go to `perf/reports/` and
@@ -348,3 +360,4 @@ npm run perf -- --table
 [21569ab]: https://github.com/oksana-kyrylchuk/core-web-vitals/commit/21569ab
 [554f2b5]: https://github.com/oksana-kyrylchuk/core-web-vitals/commit/554f2b5
 [cf032d5]: https://github.com/oksana-kyrylchuk/core-web-vitals/commit/cf032d5
+[4009e18]: https://github.com/oksana-kyrylchuk/core-web-vitals/commit/4009e18
