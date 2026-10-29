@@ -1,5 +1,7 @@
 # Core Web Vitals
 
+[![CI](https://github.com/oksana-kyrylchuk/core-web-vitals/actions/workflows/ci.yml/badge.svg)](https://github.com/oksana-kyrylchuk/core-web-vitals/actions/workflows/ci.yml)
+
 A small React + TypeScript finance dashboard used as a controlled environment
 for measuring and fixing Core Web Vitals. The performance problems are built in
 on purpose, so each fix can be measured on its own against a stable baseline.
@@ -276,6 +278,13 @@ npx playwright install chromium   # once
 npm run test:e2e
 npm run test:e2e:ui               # watch mode with the trace viewer
 ```
+
+CI (`.github/workflows/ci.yml`) runs on every push to `main` and every pull
+request: lint, type-check the tests (Playwright transpiles them without
+checking types), build, then the whole suite on Chromium with two retries. The
+HTML report, with traces of any retried test, is kept as a build artifact for
+14 days. Lighthouse series are not run in CI: a shared runner's timings are not
+comparable with the series in `perf/runs/`, so those stay on one machine.
 
 What the suite covers (`tests/`):
 

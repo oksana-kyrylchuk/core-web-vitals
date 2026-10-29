@@ -43,7 +43,11 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: `npm run build && npm run preview -- --port ${PORT} --strictPort`,
+    // CI builds in its own step (.github/workflows/ci.yml), so a build failure
+    // is reported as one; here the server only has to serve dist/.
+    command: process.env.CI
+      ? `npm run preview -- --port ${PORT} --strictPort`
+      : `npm run build && npm run preview -- --port ${PORT} --strictPort`,
     url: BASE_URL,
     // Locally, reuse a preview you already have running for perf work.
     // In CI, always build fresh.
