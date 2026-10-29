@@ -16,6 +16,7 @@ declare global {
       lcp: { element: string; url: string; startTime: number }[];
       shifts: { value: number; sources: string[]; hadRecentInput: boolean }[];
       events: { interactionId: number; name: string; duration: number }[];
+      firstInput: { name: string; duration: number }[];
     };
   }
 }
@@ -23,7 +24,7 @@ declare global {
 /** Record LCP candidates, layout shifts and event timings from page start. */
 async function observe(page: Page) {
   await page.addInitScript(() => {
-    window.__perf = { lcp: [], shifts: [], events: [] };
+    window.__perf = { lcp: [], shifts: [], events: [], firstInput: [] };
     const describe = (n: Node | null | undefined) =>
       n instanceof Element ? `${n.tagName.toLowerCase()}${n.className ? '.' + String(n.className).split(' ')[0] : ''}` : String(n);
 
@@ -51,6 +52,13 @@ async function observe(page: Page) {
         if (ev.interactionId) window.__perf.events.push({ interactionId: ev.interactionId, name: ev.name, duration: ev.duration });
       }
     }).observe({ type: 'event', durationThreshold: 16, buffered: true } as PerformanceObserverInit);
+
+    // 'event' entries only exist for interactions of 16 ms or more, so on a
+    // fast machine there may be none at all. 'first-input' is always reported,
+    // which proves the measurement is wired up.
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) window.__perf.firstInput.push({ name: e.name, duration: e.duration });
+    }).observe({ type: 'first-input', buffered: true });
   });
 }
 
@@ -119,17 +127,24 @@ test.describe('CLS', () => {
     return (await perf(page)).shifts.filter((s) => !s.hadRecentInput);
   }
 
-  test('nothing shifts while the banner and the chart arrive', async ({ page }) => {
+  // Nothing should visibly move. Where the Inter webfont loads, swapping it in
+  // (display=swap) nudges text widths by a few hundredths of a pixel: 0.00003
+  // measured on a Mac. A budget of 0.001 lets that through and still fails
+  // loudly on a real shift: the banner outgrowing its slot was 0.016.
+  const CLS_BUDGET = 0.001;
+  const total = (shifts: { value: number }[]) => shifts.reduce((sum, s) => sum + s.value, 0);
+
+  test('nothing visibly shifts while the banner and the chart arrive', async ({ page }) => {
     const shifts = await settledShifts(page);
-    expect(shifts, 'layout shifts (value and the nodes that moved)').toEqual([]);
+    expect(total(shifts), `layout shifts: ${JSON.stringify(shifts)}`).toBeLessThan(CLS_BUDGET);
   });
 
-  test('nothing shifts at 320 CSS px either', async ({ page }) => {
+  test('nothing visibly shifts at 320 CSS px either', async ({ page }) => {
     // The banner wraps onto more lines the narrower the screen, so a reserve
     // that fits one width can be too small for another.
     await page.setViewportSize({ width: 320, height: 640 });
     const shifts = await settledShifts(page);
-    expect(shifts).toEqual([]);
+    expect(total(shifts), `layout shifts: ${JSON.stringify(shifts)}`).toBeLessThan(CLS_BUDGET);
   });
 });
 
@@ -151,13 +166,19 @@ test.describe('INP', () => {
     await page.waitForTimeout(500);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
 
-    const { events } = await perf(page);
+    const { events, firstInput } = await perf(page);
+    expect(firstInput, 'first-input entry (Event Timing is being recorded)').toHaveLength(1);
+
+    // No 'event' entries means every interaction took under 16 ms: a pass,
+    // not a broken measurement. That is what a fast Mac reports here.
     const byInteraction = new Map<number, number>();
     for (const e of events) byInteraction.set(e.interactionId, Math.max(byInteraction.get(e.interactionId) ?? 0, e.duration));
     const worst = Math.max(0, ...byInteraction.values());
 
-    test.info().annotations.push({ type: 'INP (worst interaction, ms)', description: String(worst) });
-    expect(byInteraction.size, 'interactions observed').toBeGreaterThan(0);
+    test.info().annotations.push({
+      type: 'INP (worst interaction)',
+      description: byInteraction.size ? `${worst} ms` : 'every interaction under 16 ms',
+    });
     expect(worst).toBeLessThan(200);
   });
 });

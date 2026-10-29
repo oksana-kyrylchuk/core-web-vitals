@@ -294,10 +294,13 @@ What the suite covers (`tests/`):
 - **performance guards** — the fixes measured above, kept from regressing. The
   hero image is the LCP element, first-party, requested once (a preload that
   drifts from the `<img>` srcset would fetch it twice), not lazy, under
-  200 kB. No layout shift at all while the banner and the chart arrive, at
-  1280, 412 and 320 px. INP: typing "biedronka" at 4x CPU slowdown (via CDP),
-  the worst interaction from `PerformanceObserver` stays under 200 ms; on a
-  test machine it reads 32–56 ms, in line with the 44–51 ms measured by hand.
+  200 kB. No visible layout shift (total under 0.001) while the banner and
+  the chart arrive, at 1280, 412 and 320 px; the only shift left is the Inter
+  webfont swapping in, 0.00003. INP: typing "biedronka" at 4x CPU slowdown (via
+  CDP), the worst interaction from `PerformanceObserver` stays under 200 ms. On
+  a Linux test machine it reads 32–56 ms, in line with the 44–51 ms measured by
+  hand; on the M-series Mac every interaction is under the 16 ms Event Timing
+  threshold, so none is reported at all.
   The entry chunk stays under 250 kB with no recharts code in it.
 
 Each group was checked the other way round: disabling virtualization, reversing

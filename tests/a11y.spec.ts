@@ -1,5 +1,6 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { TRANSACTIONS } from '../src/data/transactions';
 import { TOTAL, resultCount, rows, search, table } from './support/list';
 
 const upgrade = (page: Page) => page.getByRole('button', { name: 'Upgrade' });
@@ -123,13 +124,16 @@ test.describe('keyboard', () => {
     await page.keyboard.press('Tab'); // Upgrade
     await page.keyboard.press('Tab'); // search
     await page.keyboard.type('biedronka');
-    await expect(resultCount(page)).not.toHaveText(`${TOTAL} transactions`);
+    // Wait for the final count, not just any change: the list renders from a
+    // deferred value, so "b" (3222 results) can show before "biedronka" does.
+    // Reading the count too early made this test look for row 3221 on a Mac.
+    const expected = TRANSACTIONS.filter((t) => t.merchant === 'Biedronka').length;
+    await expect(resultCount(page)).toHaveText(`${expected} transactions`);
 
     await page.keyboard.press('Tab'); // the table
     await expect(table(page)).toBeFocused();
     await page.keyboard.press('End');
-    const shown = Number((await resultCount(page).textContent())!.match(/\d+/)![0]);
-    await expect(page.locator(`[data-index="${shown - 1}"]`)).toBeVisible();
+    await expect(page.locator(`[data-index="${expected - 1}"]`)).toBeVisible();
   });
 });
 
