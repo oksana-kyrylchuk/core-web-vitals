@@ -102,15 +102,15 @@ test.describe('LCP: the hero image', () => {
   });
 
   test('the image this viewport downloads stays under 200 kB', async ({ page }) => {
-    const sizes: number[] = [];
-    page.on('response', async (res) => {
-      if (/hero-\d+\.jpg$/.test(res.url())) sizes.push((await res.body()).length);
-    });
+    // Wait for the response itself. The first version pushed sizes from an
+    // async 'response' handler, so the assertion could run before the body had
+    // been read: on a GitHub runner it saw zero responses and passed on retry.
+    const isHero = (url: string) => /hero-\d+\.jpg$/.test(url);
+    const heroResponse = page.waitForResponse((res) => isHero(res.url()));
     await page.goto('/');
-    await page.waitForLoadState('load');
+    const body = await (await heroResponse).body();
 
-    expect(sizes).toHaveLength(1);
-    expect(sizes[0]).toBeLessThan(200_000);
+    expect(body.length).toBeLessThan(200_000);
   });
 });
 
